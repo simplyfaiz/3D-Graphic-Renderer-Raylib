@@ -16,6 +16,7 @@ int main()
     Shape cube, cube2;
 
     cube.vertices = {
+        
         {-h, -h, -h}, {h, -h, -h}, {h, h, -h}, {-h, h, -h},
         {-h, -h,  h}, {h, -h,  h}, {h, h,  h}, {-h, h,  h}
     };
@@ -31,10 +32,17 @@ int main()
     cube2.edges = cube.edges;
     cube2.setColor(RED);
 
+    cube.saveShape("resources/cube.txt");
+    cube2.saveShape("resources/cube2.txt");
+
+    Shape mew, mew2;
+    mew.loadShape("resources/cube.txt");
+    mew2.loadShape("resources/cube2.txt");
+    
     // create a copy of original world to turn into camera view #TODO make this automatic in render pipeline
     World world;
-    world.shapes.push_back(cube);
-    world.shapes.push_back(cube2);
+    world.shapes.push_back(mew);
+    world.shapes.push_back(mew2);
 
 
     World worldToRender = world; 
@@ -49,4 +57,3 @@ int main()
     }
     return 0;
 }
-

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "controller.h"
 #include "vector3D.h"
 
@@ -30,13 +31,22 @@ void Controller::handleInput()
 // Move stuff
 void Controller::update(World &world)
 {
-    world.camera.move(camMove);
-    world.shapes[selectedShapeIndex].move(shapeMove);
+    //Individual shape mode
+    if (moveMode == 1)
+        world.shapes[selectedShapeIndex].move(shapeMove);
+
+    // Camera Mode
+    else if (moveMode == 0)
+        world.camera.move(camMove);
+
+    else
+        std::cout << "invalid Move Mode";
 }
 
-int             Controller::moveSpeed          = 1;
-int             Controller::selectedShapeIndex = 0;
-bool            Controller::moveMode           = 0;
+int  Controller::moveSpeed          = 1;
+int  Controller::selectedShapeIndex = 0;
+bool Controller::moveMode           = 0;
+
 Vec3 Controller::camMove(0,0,0);
 Vec3 Controller::shapeMove(0,0,0);
 

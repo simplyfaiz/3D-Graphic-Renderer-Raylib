@@ -4,6 +4,8 @@
 #include "raylib-cpp.hpp"
 #include "camera.h"
 
+// #TODO turn this into Compute renderer, not Destructive
+
 // clang-format off
 /*
 - Inverts Y axis around the origin
@@ -149,8 +151,9 @@ void Renderer::pushWorldIntoView(World &world, int amount)
 // Render world via render pipeline, Transform->Project->Draw
 void Renderer::render(World &world)
 {
-    prepareWorld(world);     // Transform, Project, and Input
-    drawWorld(world);  // Draw to screen
+    World        worldCopy = world;  // Copy the original to not cause floating drift in original world
+    prepareWorld(worldCopy);         // Transform, Project, and Input
+    drawWorld   (worldCopy);         // Draw to screen
 }
 
 // clang-format on

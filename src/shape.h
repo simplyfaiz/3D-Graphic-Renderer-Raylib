@@ -7,13 +7,11 @@ class Shape
 {
   private:
     class EdgeIndexPair
-    {
-      private:
-        raylib::Color color = raylib::GREEN;
-
+    {   
       public:
-        int first;
-        int second;
+      int first;
+      int second;
+      raylib::Color color = raylib::GREEN;
 
         raylib::Color getColor();
         void setColor(raylib::Color c);
@@ -31,4 +29,6 @@ class Shape
     void move(const Vec3 &delta);
     void rotate(const Vec3 &delta);
     void setColor(raylib::Color color);
+    void saveShape(std::string fileName);      // Stores Shape to a raw text file
+    void loadShape(std::string fileName);  // Loads Shape from a raw text file
 };
