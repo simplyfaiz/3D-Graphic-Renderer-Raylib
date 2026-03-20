@@ -125,5 +125,5 @@ void Shape::loadShape(std::string filePath)
 }
 
 // Getter, Setter
-void Shape::EdgeIndexPair::setColor(raylib::Color c) { this->color = c; }
-raylib::Color Shape::EdgeIndexPair::getColor() { return color; }
+void          Shape::EdgeIndexPair::setColor(raylib::Color c) { this-> color = c; }
+raylib::Color Shape::EdgeIndexPair::getColor()                { return color; }
