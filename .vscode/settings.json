@@ -73,5 +73,7 @@
 		"stop_token": "cpp",
 		"thread": "cpp"
 	},
-	"cmake.sourceDirectory": "D:/Project_Files/Snake_Project/include"
+	"cmake.sourceDirectory": "D:/Project_Files/Snake_Project/include",
+	"cmake.ignoreCMakeListsMissing": true,
+	"C_Cpp.default.compilerPath": "D:/w64devkit/bin/g++.exe"
 }
