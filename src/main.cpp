@@ -11,49 +11,23 @@ int main()
 {
     raylib::Window graphicWindow(600, 600, "Graphic Render", FLAG_VSYNC_HINT);
     SetTargetFPS(75);
-
-    float h = 100.f; // Cube face distance from origin, Used to create symmetric cube
-    Shape cube, cube2;
-
-    cube.vertices = {
-        
-        {-h, -h, -h}, {h, -h, -h}, {h, h, -h}, {-h, h, -h},
-        {-h, -h,  h}, {h, -h,  h}, {h, h,  h}, {-h, h,  h}
-    };
-
-    cube2.vertices = cube.vertices;
-
-    cube.edges = {
-        {0, 1}, {1, 2}, {2, 3}, {3, 0}, // back face
-        {4, 5}, {5, 6}, {6, 7}, {7, 4}, // front face
-        {0, 4}, {1, 5}, {2, 6}, {3, 7}  // connecting edges
-    };
-
-    cube2.edges = cube.edges;
-    cube2.setColor(RED);
-
-    cube.saveShape("resources/cube.txt");
-    cube2.saveShape("resources/cube2.txt");
-
-    Shape mew, mew2;
-    mew.loadShape("resources/cube.txt");
-    mew2.loadShape("resources/cube2.txt");
     
-    // create a copy of original world to turn into camera view #TODO make this automatic in render pipeline
+    Shape cube1, cube2;
+    
+    
+    cube1.loadShape("resources/cube.txt");
+    cube2.loadShape("resources/cube2.txt");
+   
     World world;
-    world.shapes.push_back(mew);
-    world.shapes.push_back(mew2);
+    world.shapes.push_back(cube1);
+    world.shapes.push_back(cube2);
 
-
-    World worldToRender = world; 
-    
+    Renderer::pushWorldIntoView(world, 600);// Temp function
     while (!WindowShouldClose())
     {
         Controller::handleInput();
         Controller::update(world);
-        worldToRender = world;
-        Renderer::pushWorldIntoView(worldToRender, 600);// Temp function
-        Renderer::render(worldToRender);
+        Renderer::render(world);
     }
     return 0;
 }
