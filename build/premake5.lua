@@ -1,3 +1,6 @@
+-- Export Compile Commands module for clangd support
+require "ecc/ecc"
+
 newoption
 {
     trigger = "graphics",
@@ -12,7 +15,7 @@ newoption
         { "openges3", "OpenGL ES3"},
         { "software", "OpenGL 1.1 Software Render"}
     },
-    default = "opengl33"
+    default = "opengl21"
 }
 
 newoption
@@ -49,17 +52,17 @@ end
 
 function check_raylib()
     os.chdir("external")
-    if(os.isdir("raylib-master") == false) then
-        if(not os.isfile("raylib-master.zip")) then
+    if(os.isdir("raylib-5.5") == false) then
+        if(not os.isfile("raylib-5.5.zip")) then
             print("Raylib not found, downloading from github")
-            local result_str, response_code = http.download("https://github.com/raysan5/raylib/archive/refs/heads/master.zip", "raylib-master.zip", {
+            local result_str, response_code = http.download("https://github.com/raysan5/raylib/archive/refs/tags/5.5.zip", "raylib-5.5.zip", {
                 progress = download_progress,
                 headers = { "From: Premake", "Referer: Premake" }
             })
         end
         print("Unzipping to " ..  os.getcwd())
-        zip.extract("raylib-master.zip", os.getcwd())
-        os.remove("raylib-master.zip")
+        zip.extract("raylib-5.5.zip", os.getcwd())
+        os.remove("raylib-5.5.zip")
     end
     os.chdir("../")
 end
@@ -103,24 +106,18 @@ function platform_defines()
     filter {"system:macosx"}
         disablewarnings {"deprecated-declarations"}
 
-    filter {"system:linux"}
+    filter {"system:linux", "options:wayland=off"}
         defines {"_GLFW_X11"}
-        defines {"_GNU_SOURCE"}
--- This is necessary, otherwise compilation will fail since
--- there is no CLOCK_MONOTOMIC. raylib claims to have a workaround
--- to compile under c99 without -D_GNU_SOURCE, but it didn't seem
--- to work. raylib's Makefile also adds this flag, probably why it went
--- unnoticed for so long.
--- It compiles under c11 without -D_GNU_SOURCE, because c11 requires
--- to have CLOCK_MONOTOMIC
--- See: https://github.com/raysan5/raylib/issues/2729
 
-    filter{}
+    filter {"system:linux", "options:wayland=on"}
+        defines {"_GLFW_WAYLAND"}
+
+    filter {}
 end
 
 -- if you don't want to download raylib, then set this to false, and set the raylib dir to where you want raylib to be pulled from, must be full sources.
 downloadRaylib = true
-raylib_dir = "external/raylib-master"
+raylib_dir = "external/raylib-5.5"
 
 workspaceName = 'MyGame'
 baseName = path.getbasename(path.getdirectory(os.getcwd()));
@@ -158,7 +155,7 @@ workspace (workspaceName)
     filter { "platforms:x64" }
         architecture "x86_64"
 
-    filter { "platforms:Arm64" }
+    filter { "platforms:ARM64" }
         architecture "ARM64"
 
     filter {}
@@ -173,7 +170,7 @@ if (downloadRaylib) then
 
     project (workspaceName)
         kind "ConsoleApp"
-        location "build_files/"
+        location "../"
         targetdir "../bin/%{cfg.buildcfg}"
 
         filter {"system:windows", "configurations:Release", "action:gmake*"}
@@ -187,9 +184,6 @@ if (downloadRaylib) then
         filter "action:vs*"
             debugdir "$(SolutionDir)"
 
-        filter {"action:gmake*"}
-            buildoptions { "-Wno-shadow" }  -- suppress shadow variable warnings
-
         filter {"action:gmake*"} -- Uncoment if you need to force StaticLib
 --          buildoptions { "-static" }
         filter{}
@@ -198,29 +192,29 @@ if (downloadRaylib) then
         {
             ["Header Files/*"] = { "../include/**.h",  "../include/**.hpp", "../src/**.h", "../src/**.hpp"},
             ["Source Files/*"] = {"../src/**.c", "src/**.cpp"},
-            ["Windows Resource Files/*"] = {"../src/**.rc", "src/**.ico"},
+            ["Windows Resource Files/*"] = {"../src/**.rc", "../src/**.ico"},
+            ["Game Resource Files/*"] = {"../resources/**"},
         }
         
         files {"../src/**.c", "../src/**.cpp", "../src/**.h", "../src/**.hpp", "../include/**.h", "../include/**.hpp"}
         
         filter {"system:windows", "action:vs*"}
             files {"../src/*.rc", "../src/*.ico"}
+            files {"../resources/**"}
 
         filter{}
         
         includedirs { "../src" }
-        includedirs { "../include" }
-        includedirs { "../include/raylibCpp" }
+        externalincludedirs { "../include" }
 
         links {"raylib"}
 
         cdialect "C17"
         cppdialect "C++17"
 
-        includedirs { raylib_dir .."/src" }
-        includedirs { raylib_dir .."/src/external" }
-        includedirs { raylib_dir .."/src/external/glfw/include" }
-        flags { "ShadowedVariables" }
+        includedirs {raylib_dir .. "/src" }
+
+        flags { "ShadowedVariables"}
         platform_defines()
 
         filter "action:vs*"
@@ -236,7 +230,13 @@ if (downloadRaylib) then
             libdirs {"../bin/%{cfg.buildcfg}"}
 
         filter "system:linux"
-            links {"pthread", "m", "dl", "rt", "X11"}
+            links {"pthread", "m", "dl", "rt"}
+
+        filter {"system:linux", "options:wayland=off"}
+            links {"X11"}
+
+        filter {"system:linux", "options:wayland=on"}
+            links {"wayland-client", "wayland-cursor", "wayland-egl", "xkbcommon"}
 
         filter "system:macosx"
             links {"OpenGL.framework", "Cocoa.framework", "IOKit.framework", "CoreFoundation.framework", "CoreAudio.framework", "CoreVideo.framework", "AudioToolbox.framework"}
@@ -249,13 +249,40 @@ if (downloadRaylib) then
     
         platform_defines()
 
-        location "build_files/"
+        location "../"
 
         language "C"
         targetdir "../bin/%{cfg.buildcfg}"
 
+
         filter {"options:wayland=on"}
             defines {"GLFW_LINUX_ENABLE_WAYLAND=TRUE" }
+
+        filter {"options:wayland=on", "system:linux"}
+            prebuildcommands {
+                "@echo Generating Wayland protocols...",
+                -- Core Wayland & Shell
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/wayland.xml ../" .. raylib_dir .. "/src/wayland-client-protocol.h",
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/xdg-shell.xml ../" .. raylib_dir .. "/src/xdg-shell-client-protocol.h",
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/xdg-decoration-unstable-v1.xml ../" .. raylib_dir .. "/src/xdg-decoration-unstable-v1-client-protocol.h",
+
+                -- Viewporter
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/viewporter.xml ../" .. raylib_dir .. "/src/viewporter-client-protocol.h",
+
+                -- Relative Pointer
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/relative-pointer-unstable-v1.xml ../" .. raylib_dir .. "/src/relative-pointer-unstable-v1-client-protocol.h",
+                -- Pointer Constraints
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/pointer-constraints-unstable-v1.xml ../" .. raylib_dir .. "/src/pointer-constraints-unstable-v1-client-protocol.h",
+
+                -- Fractional Scale
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/fractional-scale-v1.xml ../" .. raylib_dir .. "/src/fractional-scale-v1-client-protocol.h",
+
+                -- XDG Activation
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/xdg-activation-v1.xml ../" .. raylib_dir .. "/src/xdg-activation-v1-client-protocol.h",
+                -- Idle Inhibit
+                "@wayland-scanner client-header ../" .. raylib_dir .. "/src/external/glfw/deps/wayland/idle-inhibit-unstable-v1.xml ../" .. raylib_dir .. "/src/idle-inhibit-unstable-v1-client-protocol.h",
+            }
+        filter {}
 
         filter "action:vs*"
             defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
