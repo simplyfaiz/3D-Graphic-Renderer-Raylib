@@ -15,7 +15,7 @@ int main()
     Shape cube1, cube2;
     
     
-    cube1.loadShape("resources/cube.txt");
+    cube1.loadShape("resources/cube1.txt");
     cube2.loadShape("resources/cube2.txt");
    
     World world;
