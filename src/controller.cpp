@@ -15,14 +15,14 @@ void Controller::handleInput()
     if(IsKeyPressed(KEY_P)) moveMode=1; // Shape #TODO make selector
 
     // Decide change in x,y,z based on input
-    if (IsKeyDown(KEY_D)) moveVec.x += moveSpeed;
-    if (IsKeyDown(KEY_A)) moveVec.x -= moveSpeed;
+    if (IsKeyDown(KEY_D)) moveVec.x_ += moveSpeed;
+    if (IsKeyDown(KEY_A)) moveVec.x_ -= moveSpeed;
     
-    if (IsKeyDown(KEY_W)) moveVec.y += moveSpeed;
-    if (IsKeyDown(KEY_S)) moveVec.y -= moveSpeed;
+    if (IsKeyDown(KEY_W)) moveVec.y_ += moveSpeed;
+    if (IsKeyDown(KEY_S)) moveVec.y_ -= moveSpeed;
 
-    if (IsKeyDown(KEY_I)) moveVec.z += moveSpeed;
-    if (IsKeyDown(KEY_K)) moveVec.z -= moveSpeed;
+    if (IsKeyDown(KEY_I)) moveVec.z_ += moveSpeed;
+    if (IsKeyDown(KEY_K)) moveVec.z_ -= moveSpeed;
 
     if(moveMode == 0) camMove   = moveVec;
     if(moveMode == 1) shapeMove = moveVec;
