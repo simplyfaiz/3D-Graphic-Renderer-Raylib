@@ -1,4 +1,4 @@
-# Ludo-Cpp-Raylib
+# 3D-Renderer
 
 A work-in-progress 3D renderer
 Built with C++ and Raylib 5.5
