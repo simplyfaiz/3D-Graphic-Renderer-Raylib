@@ -27,17 +27,22 @@
 			local cfg = m.getConfig(prj)
 			local args = m.getArguments(prj, cfg)
 			local files = table.shallowcopy(prj._.files)
-			for i,node in ipairs(files) do
-				local output = cfg.objdir .. "/" ..  node.objname .. ".o"
-				local obj = path.getrelative(prj.location, output)
-				p.push("{")
-				p.push("\"arguments\": [")
-				m.writeArgs(args, obj, node.relpath)
-				p.pop("],")
-				p.w("\"directory\": \"%s\",", prj.location)
-				p.w("\"file\": \"%s\",", node.abspath)
-				p.w("\"output\": \"%s\"", output)
-				p.pop("},")
+			for _, node in ipairs(files) do
+				local ext = path.getextension(node.abspath):lower()
+
+				if ext == ".c" or ext == ".cpp" or ext == ".cc" or ext == ".cxx" then
+					local output = cfg.objdir .. "/" .. node.objname .. ".o"
+					local obj = path.getrelative(prj.location, output)
+
+					p.push("{")
+					p.push("\"arguments\": [")
+					m.writeArgs(args, obj, node.relpath)
+					p.pop("],")
+					p.w("\"directory\": \"%s\",", prj.location)
+					p.w("\"file\": \"%s\",", node.abspath)
+					p.w("\"output\": \"%s\"", output)
+					p.pop("},")
+				end
 			end
 		end
 	end
